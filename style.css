@@ -38,3 +38,9 @@ body {
   margin-top: 10px;
   text-align: center;
 }
+
+.today {
+  background-color: #fff3cd;
+  border: 2px solid #ffa500;
+  font-weight: bold;
+}

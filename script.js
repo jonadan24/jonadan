@@ -30,6 +30,16 @@ function renderCalendar() {
     cell.dataset.date = dateStr;
     cell.textContent = day;
 
+    // ✅ 오늘 날짜면 .today 클래스 추가
+    const today = new Date();
+    const isToday =
+      day === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear();
+    if (isToday) {
+      cell.classList.add("today");
+    }
+
     // 일정이 있으면 표시
     if (events[dateStr]) {
       const eventList = events[dateStr].slice(0, 2);

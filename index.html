@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -42,10 +43,15 @@
       <span id="month-year">2025년 7월</span>
       <button onclick="nextMonth()">▶</button>
     </div>
+    <!-- ✅ 요일 라인 추가 -->
+    <div class="weekday-header">
+      <div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div><div>일</div>
+    </div>
+
     <div class="calendar-grid" id="calendar-grid"></div>
   </div>
 
-  <!-- 반드시 body 맨 아래에 script.js 로드 -->
+  <!-- script.js는 반드시 마지막에 로드 -->
   <script src="script.js"></script>
 </body>
 </html>

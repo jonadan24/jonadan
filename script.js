@@ -1,63 +1,82 @@
-
-const { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } = window.firestoreFns;
-
 let currentDate = new Date();
-let scheduleData = {}; // 날짜별 일정 배열
+let events = {};
 
 function renderCalendar() {
-  const calendarGrid = document.getElementById("calendar-grid");
-  const monthYear = document.getElementById("month-year");
-  calendarGrid.innerHTML = "";
-
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  monthYear.textContent = `${year}년 ${month + 1}월`;
+  const firstDay = new Date(year, month, 1);
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  const startDay = firstDay.getDay();
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  document.getElementById("month-year").textContent = `${year}년 ${month + 1}월`;
+  const grid = document.getElementById("calendar-grid");
+  grid.innerHTML = "";
 
-  for (let i = 0; i < firstDay; i++) {
-    const empty = document.createElement("div");
-    calendarGrid.appendChild(empty);
+  for (let i = 0; i < startDay; i++) {
+    grid.appendChild(document.createElement("div"));
   }
 
-  for (let day = 1; day <= daysInMonth; day++) {
+  for (let day = 1; day <= lastDate; day++) {
     const cell = document.createElement("div");
-    cell.className = "calendar-cell";
-
-    const dateKey = `${year}-${month + 1}-${day}`;
-    const dateDiv = document.createElement("div");
-    dateDiv.textContent = day;
-    cell.appendChild(dateDiv);
+    cell.className = "day";
+    const dateStr = `${year}-${(month + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+    cell.dataset.date = dateStr;
+    cell.textContent = day;
 
     const today = new Date();
-    if (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    ) {
-      cell.classList.add("today");
-    }
+    const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    if (isToday) cell.classList.add("today");
 
-    if (scheduleData[dateKey]) {
-      const eventList = scheduleData[dateKey];
-      eventList.slice(0, 2).forEach(ev => {
+    if (events[dateStr]) {
+      events[dateStr].forEach((event, idx) => {
         const div = document.createElement("div");
-        div.className = "schedule-text";
-        div.textContent = ev.text;
-        if (ev.done) div.classList.add("completed");
+        div.textContent = `${event.text}${event.done ? " [마감]" : ""}`;
+        div.className = "event";
+        div.style.fontSize = "0.75em";
+        div.style.color = event.done ? "gray" : "blue";
+        if (event.done === true || event.done === "true") {
+          div.style.textDecoration = "line-through"; // ✅ 취소선 적용
+        }
         cell.appendChild(div);
       });
-      if (eventList.length > 2) {
-        const moreDiv = document.createElement("div");
-        moreDiv.className = "schedule-text";
-        moreDiv.textContent = `+${eventList.length - 2}`;
-        cell.appendChild(moreDiv);
-      }
     }
 
-    cell.onclick = () => openSchedulePrompt(dateKey);
-    calendarGrid.appendChild(cell);
+    cell.addEventListener("click", async () => {
+      const currentEvents = events[dateStr] || [];
+      let message = `${dateStr} 일정\n`;
+      if (currentEvents.length > 0) {
+        message += currentEvents
+          .map((e, i) => `${i + 1}. ${e.text} ${e.done ? "[마감]" : ""}`)
+          .join("\n");
+        message += `\n\n새 일정 입력 또는 삭제(D번호)/마감(M번호)`;
+      } else {
+        message += "(등록된 일정 없음)\n\n새로운 일정 입력:";
+      }
+
+      const input = prompt(message);
+      if (input === null) return;
+
+      const trimmed = input.trim();
+      if (/^D\d+$/.test(trimmed)) {
+        const idx = parseInt(trimmed.slice(1), 10) - 1;
+        if (idx >= 0 && idx < currentEvents.length) {
+          const id = currentEvents[idx].id;
+          await deleteScheduleFromFirebase(id);
+        }
+      } else if (/^M\d+$/.test(trimmed)) {
+        const idx = parseInt(trimmed.slice(1), 10) - 1;
+        if (idx >= 0 && idx < currentEvents.length) {
+          const id = currentEvents[idx].id;
+          await toggleDoneInFirebase(id, true);
+        }
+      } else if (trimmed !== "") {
+        const id = await saveScheduleToFirebase(dateStr, trimmed);
+      }
+
+      await loadSchedulesFromFirebase(); // ✅ 최신 데이터 반영
+    });
+
+    grid.appendChild(cell);
   }
 }
 
@@ -65,76 +84,67 @@ function prevMonth() {
   currentDate.setMonth(currentDate.getMonth() - 1);
   renderCalendar();
 }
-
 function nextMonth() {
   currentDate.setMonth(currentDate.getMonth() + 1);
   renderCalendar();
 }
 
-async function openSchedulePrompt(dateKey) {
-  const colRef = collection(db, "posts", "schedules", "items");
-  const eventList = scheduleData[dateKey] || [];
-
-  let msg = `${dateKey} 일정
-`;
-  if (eventList.length > 0) {
-    msg += eventList.map((ev, i) => `${i + 1}. ${ev.text}${ev.done ? " [마감]" : ""}`).join("\n");
-    msg += `\n\n새 일정 입력 또는 D번호(삭제)/M번호(마감):`;
-  } else {
-    msg += "(일정 없음)\n새 일정 입력:";
-  }
-
-  const input = prompt(msg);
-  if (!input) return;
-
-  const trimmed = input.trim();
-  const dMatch = trimmed.match(/^D(\d+)$/i);
-  const mMatch = trimmed.match(/^M(\d+)$/i);
-
-  if (dMatch) {
-    const index = parseInt(dMatch[1], 10) - 1;
-    const target = eventList[index];
-    if (target) {
-      await deleteDoc(doc(db, "posts", "schedules", "items", target.id));
-      eventList.splice(index, 1);
-    }
-  } else if (mMatch) {
-    const index = parseInt(mMatch[1], 10) - 1;
-    const target = eventList[index];
-    if (target) {
-      target.done = true;
-      await updateDoc(doc(db, "posts", "schedules", "items", target.id), { done: true });
-    }
-  } else if (trimmed !== "") {
-    const docRef = await addDoc(colRef, {
-      date: dateKey,
-      text: trimmed,
+async function saveScheduleToFirebase(date, text) {
+  const { collection, addDoc } = window.firestoreFns;
+  try {
+    const docRef = await addDoc(collection(window.db, "posts"), {
+      date: date,
+      text: text,
       done: false
     });
-    eventList.push({ id: docRef.id, text: trimmed, done: false });
+    return docRef.id;
+  } catch (err) {
+    console.error("❌ 저장 실패:", err);
+    return null;
   }
-
-  if (eventList.length > 0) {
-    scheduleData[dateKey] = eventList;
-  } else {
-    delete scheduleData[dateKey];
-  }
-
-  renderCalendar();
 }
 
-async function loadFirestoreData() {
-  const colRef = collection(db, "posts", "schedules", "items");
-  const snapshot = await getDocs(colRef);
-
-  scheduleData = {};
-  snapshot.forEach((docSnap) => {
-    const { date, text, done } = docSnap.data();
-    if (!scheduleData[date]) scheduleData[date] = [];
-    scheduleData[date].push({ id: docSnap.id, text, done });
-  });
-
-  renderCalendar();
+async function deleteScheduleFromFirebase(docId) {
+  const { deleteDoc, doc: docFn } = window.firestoreFns;
+  try {
+    await deleteDoc(docFn(window.db, "posts", docId));
+  } catch (err) {
+    console.error("❌ 삭제 실패:", err);
+  }
 }
 
-loadFirestoreData();
+async function toggleDoneInFirebase(docId, doneValue) {
+  const { updateDoc, doc: docFn } = window.firestoreFns;
+  try {
+    await updateDoc(docFn(window.db, "posts", docId), {
+      done: doneValue
+    });
+  } catch (err) {
+    console.error("❌ 마감 처리 실패:", err);
+  }
+}
+
+async function loadSchedulesFromFirebase() {
+  const { collection, getDocs } = window.firestoreFns;
+  try {
+    const snapshot = await getDocs(collection(window.db, "posts"));
+    const map = {};
+    snapshot.forEach(docSnap => {
+      const d = docSnap.data();
+      if (!map[d.date]) map[d.date] = [];
+      map[d.date].push({
+        id: docSnap.id,
+        text: d.text,
+        done: d.done
+      });
+    });
+    events = map;
+    renderCalendar();
+  } catch (err) {
+    console.error("❌ 불러오기 실패:", err);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  await loadSchedulesFromFirebase();
+});

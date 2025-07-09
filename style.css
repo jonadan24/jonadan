@@ -110,8 +110,16 @@ body {
   text-align: center;
 }
 
+@media (max-width: 480px) {
+  .quick-links {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .quick-links a {
-  display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 10px;
   background-color: #eef3ff;
   border-radius: 10px;
@@ -119,8 +127,10 @@ body {
   color: #3366cc;
   font-size: 0.85em;
   font-weight: bold;
+  height: 40px;
   transition: background-color 0.2s ease;
 }
+
 
 .quick-links a:hover {
   background-color: #d8e7ff;

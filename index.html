@@ -36,7 +36,17 @@
     };
   </script>
 </head>
+
 <body>
+  <script>
+    const secret = "0330"; // 원하는 비밀번호로 바꾸세요
+    const input = prompt("비밀번호를 입력하세요:");
+    if (input !== secret) {
+      alert("잘못된 비밀번호입니다.");
+      document.body.innerHTML = "<h2 style='text-align:center;margin-top:20vh;'>🚫 접근이 차단되었습니다</h2>";
+      throw new Error("비밀번호 오류로 실행 중단됨");
+    }
+  </script>
   <div class="calendar-container">
     <div class="calendar-header">
       <button onclick="prevMonth()">◀</button>

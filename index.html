@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>개인 일정 달력</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <button onclick="prevMonth()">◀</button>
+      <span id="month-year">2025년 7월</span>
+      <button onclick="nextMonth()">▶</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+
+    <div class="buttons">
+      <button onclick="downloadCSV()">CSV 저장</button>
+      <input type="file" id="csvFileInput" accept=".csv" onchange="loadCSV()" />
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

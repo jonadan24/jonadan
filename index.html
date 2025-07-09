@@ -6,7 +6,7 @@
   <title>개인 일정 달력</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Firebase CDN -->
+  <!-- Firebase SDK (compat 버전) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -35,7 +35,6 @@
     };
   </script>
 </head>
-
 <body>
   <div class="calendar-container">
     <div class="calendar-header">
@@ -46,6 +45,7 @@
     <div class="calendar-grid" id="calendar-grid"></div>
   </div>
 
+  <!-- 반드시 body 맨 아래에 script.js 로드 -->
   <script src="script.js"></script>
 </body>
 </html>

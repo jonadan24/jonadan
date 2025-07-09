@@ -1,46 +1,60 @@
 body {
-  font-family: sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f5f7fa;
   margin: 0;
   padding: 0;
 }
 
 .calendar-container {
-  max-width: 400px;
-  margin: auto;
-  padding: 10px;
+  max-width: 600px;
+  margin: 40px auto;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .calendar-header {
-  text-align: center;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 10px;
 }
 
-.day {
-  border: 1px solid #ccc;
-  text-align: center;
+.calendar-cell {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   padding: 10px;
-  height: 60px;
+  min-height: 80px;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.day:hover {
-  background-color: #e6f7ff;
-}
-
-.buttons {
-  margin-top: 10px;
-  text-align: center;
+.calendar-cell:hover {
+  background-color: #f0f8ff;
 }
 
 .today {
-  background-color: #fff3cd;
-  border: 2px solid #ffa500;
+  background-color: #ffeb3b !important;
   font-weight: bold;
+  border: 2px solid #fbc02d;
+}
+
+.schedule-text {
+  margin-top: 5px;
+  font-size: 0.85em;
+  color: #007acc;
+}
+
+.schedule-text.completed {
+  color: gray;
+  text-decoration: line-through;
 }

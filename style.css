@@ -109,39 +109,44 @@ body {
   color: #4a4a4a;
 }
 
-.quick-links {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 10px;
-  text-align: center;
-}
-
 @media (max-width: 480px) {
   .quick-links {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* 공통 버튼 스타일 */
 .quick-links a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: inline-block;
   padding: 10px;
-  background-color: #eef3ff;
   border-radius: 10px;
   text-decoration: none;
-  color: #3366cc;
+  color: white;
   font-size: 0.85em;
   font-weight: bold;
-  height: 40px;
-  transition: background-color 0.2s ease;
+  transition: 0.2s;
+  text-align: center;
 }
 
+/* 각각의 색상 테마 */
+.btn-cloud  { background-color: #4a90e2; }
+.btn-dinner { background-color: #f25c54; }
+.btn-note   { background-color: #2ecc71; }
+.btn-gangnam { background-color: #ffb347; }
+.btn-mrblog { background-color: #9b59b6; }
+.btn-place  { background-color: #34495e; }
+.btn-revu   { background-color: #e67e22; }
+.btn-come   { background-color: #1abc9c; }
+
+.quick-links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
 
 .quick-links a:hover {
-  background-color: #d8e7ff;
+  opacity: 0.85;
 }
 
 button, input[type="file"] {

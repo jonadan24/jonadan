@@ -1,6 +1,18 @@
 let currentDate = new Date();
 let events = {};
 
+// ✅ 8가지 분류 색상 정의
+const categoryColors = {
+  클라우드리뷰: "#4a90e2",
+  디너의여왕: "#f25c54",
+  리뷰노트: "#2ecc71",
+  강남맛집: "#ffb347",
+  미블: "#9b59b6",
+  리뷰플레이스: "#34495e",
+  레뷰: "#e67e22",
+  놀러와체험단: "#1abc9c"
+};
+
 function renderCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -28,14 +40,15 @@ function renderCalendar() {
     if (isToday) cell.classList.add("today");
 
     if (events[dateStr]) {
-      events[dateStr].forEach((event, idx) => {
+      events[dateStr].forEach((event) => {
         const div = document.createElement("div");
         div.textContent = `${event.text}${event.done ? " [마감]" : ""}`;
         div.className = "event";
         div.style.fontSize = "0.75em";
-        div.style.color = event.done ? "gray" : "blue";
+        div.style.color = event.done ? "#999" : "#333";
+        div.style.backgroundColor = event.color || "#edf3ff";
         if (event.done === true || event.done === "true") {
-          div.style.textDecoration = "line-through"; // ✅ 취소선 적용
+          div.classList.add("done");
         }
         cell.appendChild(div);
       });
@@ -48,7 +61,7 @@ function renderCalendar() {
         message += currentEvents
           .map((e, i) => `${i + 1}. ${e.text} ${e.done ? "[마감]" : ""}`)
           .join("\n");
-        message += `\n\n새 일정 입력 또는 삭제(D번호)/마감(M번호)`;
+        message += `\n\n새 일정 입력 또는 삭제(D번호)/마감(M번호)\n(예: D2, M1)`;
       } else {
         message += "(등록된 일정 없음)\n\n새로운 일정 입력:";
       }
@@ -57,6 +70,7 @@ function renderCalendar() {
       if (input === null) return;
 
       const trimmed = input.trim();
+
       if (/^D\d+$/.test(trimmed)) {
         const idx = parseInt(trimmed.slice(1), 10) - 1;
         if (idx >= 0 && idx < currentEvents.length) {
@@ -70,10 +84,12 @@ function renderCalendar() {
           await toggleDoneInFirebase(id, true);
         }
       } else if (trimmed !== "") {
-        const id = await saveScheduleToFirebase(dateStr, trimmed);
+        const category = prompt("분류를 입력하세요 (예: 클라우드리뷰, 디너의여왕, 리뷰노트, 강남맛집, 미블, 리뷰플레이스, 레뷰, 놀러와체험단)");
+        const color = categoryColors[category] || "#edf3ff";
+        const id = await saveScheduleToFirebase(dateStr, trimmed, color);
       }
 
-      await loadSchedulesFromFirebase(); // ✅ 최신 데이터 반영
+      await loadSchedulesFromFirebase(); // 최신 반영
     });
 
     grid.appendChild(cell);
@@ -89,13 +105,14 @@ function nextMonth() {
   renderCalendar();
 }
 
-async function saveScheduleToFirebase(date, text) {
+async function saveScheduleToFirebase(date, text, color) {
   const { collection, addDoc } = window.firestoreFns;
   try {
     const docRef = await addDoc(collection(window.db, "posts"), {
       date: date,
       text: text,
-      done: false
+      done: false,
+      color: color
     });
     return docRef.id;
   } catch (err) {
@@ -135,7 +152,8 @@ async function loadSchedulesFromFirebase() {
       map[d.date].push({
         id: docSnap.id,
         text: d.text,
-        done: d.done
+        done: d.done,
+        color: d.color
       });
     });
     events = map;

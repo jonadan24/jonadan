@@ -13,6 +13,37 @@ const categoryColors = {
   놀러와체험단: "#1abc9c"
 };
 
+async function checkPasswordAndStartApp() {
+  const docRef = window.firestoreFns.doc(window.db, "settings", "password");
+  const pwSnap = await window.firestoreFns.getDoc(docRef);
+  const savedPw = pwSnap.exists ? pwSnap.data().value : null;
+
+  if (!savedPw) {
+    // 비밀번호 없음 → 최초 접속
+    const newPw = prompt("처음 접속하셨습니다. 비밀번호를 설정하세요.");
+    if (newPw) {
+      await window.firestoreFns.setDoc(docRef, { value: newPw });
+      alert("✅ 비밀번호가 설정되었습니다. 다시 접속해주세요.");
+      location.reload();
+    } else {
+      alert("❌ 비밀번호가 설정되지 않았습니다. 접근이 차단됩니다.");
+      document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>❌ 접근 차단됨</h2>";
+      return; // 앱 종료
+    }
+  } else {
+    // 비밀번호 있음 → 확인 요구
+    const inputPw = prompt("비밀번호를 입력하세요.");
+    if (inputPw !== savedPw) {
+      alert("❌ 비밀번호가 틀렸습니다. 접근이 차단됩니다.");
+      document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>❌ 접근 차단됨</h2>";
+      return; // 앱 종료
+    }
+  }
+
+  // 비밀번호 통과 → 정상 실행
+  await loadSchedulesFromFirebase();
+}
+
 function renderCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -164,5 +195,5 @@ async function loadSchedulesFromFirebase() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  await loadSchedulesFromFirebase();
+  await checkPasswordAndStartApp(); // ✅ 비밀번호 확인 후 달력 로딩
 });

@@ -76,7 +76,7 @@ function renderCalendar() {
         div.textContent = `${event.text}${event.done ? " [마감]" : ""}`;
         div.className = "event";
         div.style.fontSize = "0.75em";
-        div.style.color = event.done ? "#999" : "#333";
+        div.style.color = event.done ? "#ccc" : "#fff";
         div.style.backgroundColor = event.color || "#edf3ff";
         if (event.done === true || event.done === "true") {
           div.classList.add("done");
